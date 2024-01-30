@@ -3,7 +3,7 @@ import initWebRoutes from "./routes/web";
 import configViewEngine from "./config/viewEngine";
 require("dotenv").config();
 import bodyParser from "body-parser";
-// import connection from "./config/connectDB";
+import connection from "./config/connectDB";
 
 const app = express();
 
@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //test connection db
-// connection();
+connection();
 
 //init web routes
 initWebRoutes(app);
