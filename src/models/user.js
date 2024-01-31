@@ -2,7 +2,11 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
-    static associate(models) {}
+    static associate(models) {
+      //define association
+      User.belongsTo(models.Group);
+      User.belongsToMany(models.Project, { through: "Project_User" });
+    }
   }
   User.init(
     {

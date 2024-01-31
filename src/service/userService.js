@@ -26,10 +26,28 @@ const createNewUser = async (email, password, username) => {
 };
 //get list users
 const getUserList = async () => {
-  let users = [];
+  //test association
+
+  // let users = [];
   try {
-    users = await db.User.findAll();
-    return users;
+    // let newUser = await db.User.findOne({
+    //   where: { id: 1 },
+    //   // include: { model: db.Group },
+    //   include: db.Group,
+    //   nest: true,
+    // });
+
+    let roles = await db.Role.findAll({
+      // include: { model: db.Group },
+      include: { model: db.Group, where: { id: 1 } },
+      nest: true,
+    });
+
+    // console.log("check new user: ", newUser);
+    console.log("check new roel: ", roles);
+    // return newUser;
+    // users = await db.User.findAll();
+    // return users;
   } catch (error) {
     console.log("Check err: ", error);
   }

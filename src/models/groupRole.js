@@ -2,7 +2,9 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Group_Role extends Model {
-    static associate(models) {}
+    static associate(models) {
+      //define association
+    }
   }
   Group_Role.init(
     {

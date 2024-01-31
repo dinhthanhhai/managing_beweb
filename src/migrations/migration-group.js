@@ -12,7 +12,7 @@ module.exports = {
       name: {
         type: Sequelize.STRING,
       },
-      descripstion: {
+      description: {
         type: Sequelize.STRING,
       },
       createdAt: {
