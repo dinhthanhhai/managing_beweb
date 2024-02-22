@@ -9,6 +9,18 @@ const app = express();
 
 const PORT = process.env.PORT || 8080;
 
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", process.env.REACT_URL);
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "Content-Type",
+    "Authorization"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  next();
+});
+
 //config view engine
 configViewEngine(app);
 
