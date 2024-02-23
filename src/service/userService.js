@@ -28,17 +28,11 @@ const createNewUser = async (email, password, username) => {
 const getUserList = async () => {
   //test association
   try {
-    let newUser = await db.User.findOne({
-      where: { id: 1 },
-      attributes: ["id", "username", "email"],
-      include: { model: db.Group, attributes: ["name", "description"] },
-      raw: true,
-      nest: true,
-    });
-    console.log("check new user: ", newUser);
-    let arr = [];
-    arr = [...arr, newUser];
-    return arr;
+    let arrs = await db.User.findAll();
+    // console.log("check new user: ", newUser);
+    // let arr = [];
+    // arr = [...arr, newUser];
+    return arrs;
   } catch (error) {
     console.log("Check err: ", error);
   }
