@@ -6,9 +6,10 @@ const testApi = (req, res) => {
     data: "test api",
   });
 };
-
+//Register
 const handleRegister = async (req, res) => {
   try {
+    //check input
     if (!req.body.email || !req.body.phone || !req.body.password) {
       return res.status(200).json({
         EM: "Missing required parameters",
