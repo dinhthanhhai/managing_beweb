@@ -4,6 +4,11 @@ import { Op } from "sequelize";
 
 const salt = bcrypt.genSaltSync(10);
 
+//Hash pw
+const hashUserPassword = (userPassword) => {
+  return bcrypt.hashSync(userPassword, salt);
+};
+
 //Kiem tra email da ton tai
 const checkEmailExist = async (userEmail) => {
   let user = await db.User.findOne({
@@ -15,6 +20,7 @@ const checkEmailExist = async (userEmail) => {
   }
   return false;
 };
+
 //Kiem tra phone number da ton tai
 const checkPhoneExist = async (userPhone) => {
   let user = await db.User.findOne({
@@ -26,6 +32,7 @@ const checkPhoneExist = async (userPhone) => {
   }
   return false;
 };
+
 //Tao user
 const registerNewUser = async (rawUserData) => {
   try {
@@ -45,7 +52,7 @@ const registerNewUser = async (rawUserData) => {
       };
     }
     //hash password
-    let hashPassword = bcrypt.hashSync(rawUserData.password, salt);
+    let hashPassword = hashUserPassword(rawUserData.password);
     //create new user
     await db.User.create({
       email: rawUserData.email,
@@ -66,11 +73,13 @@ const registerNewUser = async (rawUserData) => {
     };
   }
 };
+
 //Check password
 const checkPassword = (inputPassword, hashPassword) => {
   return bcrypt.compareSync(inputPassword, hashPassword);
 };
 
+//Login
 const handleUserLogin = async (rawData) => {
   try {
     let user = await db.User.findOne({
@@ -120,4 +129,7 @@ const handleUserLogin = async (rawData) => {
 module.exports = {
   registerNewUser,
   handleUserLogin,
+  hashUserPassword,
+  checkEmailExist,
+  checkPhoneExist,
 };
