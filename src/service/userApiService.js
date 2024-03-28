@@ -62,37 +62,19 @@ const getUserWithPagination = async (page, limit) => {
 
 const createNewUser = async (data) => {
   try {
-    //check email/phone number
-    let isEmailExist = await loginRegisterService.checkEmailExist(
-      rawUserData.email
-    );
-    if (isEmailExist === true) {
-      return {
-        EM: "Email is already exist",
-        EC: 1,
-        DT: [],
-      };
-    }
-    let isPhoneExist = await loginRegisterService.checkPhoneExist(
-      rawUserData.phone
-    );
-    if (isPhoneExist === true) {
-      return {
-        EM: "Phone number is already exist",
-        EC: 1,
-        DT: [],
-      };
-    }
-
-    //hash password
-    await db.User.create({});
+    await db.User.create(data);
     return {
-      EM: "Created!",
+      EM: "Create success!",
       EC: 0,
       DT: [],
     };
   } catch (error) {
     console.log(error);
+    return {
+      EM: "Something wrongs with service!",
+      EC: 1,
+      DT: [],
+    };
   }
 };
 
