@@ -132,4 +132,5 @@ module.exports = {
   hashUserPassword,
   checkEmailExist,
   checkPhoneExist,
+  hashUserPassword,
 };
