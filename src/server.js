@@ -1,10 +1,10 @@
+require("dotenv").config();
 import express from "express";
 import initWebRoutes from "./routes/web";
 import initApiRoutes from "./routes/api";
 import configViewEngine from "./config/viewEngine";
-require("dotenv").config();
 import bodyParser from "body-parser";
-// import connection from "./config/connectDB";
+import cookieParser from "cookie-parser";
 import configCors from "./config/cors";
 
 const app = express();
@@ -21,12 +21,16 @@ configViewEngine(app);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//test connection db
-// connection();
+//configcookies parser
+app.use(cookieParser());
 
 //init web routes
 initWebRoutes(app);
 initApiRoutes(app);
+
+app.use((req, res) => {
+  return res.send("404 not found");
+});
 
 app.listen(PORT, () => {
   console.log(`JWT backend is listening on port ${PORT}`);
