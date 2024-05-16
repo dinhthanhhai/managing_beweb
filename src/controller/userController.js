@@ -1,4 +1,6 @@
 import userApiService from "../service/userApiService";
+import jwt from "jsonwebtoken";
+import { createAccessToken, createRefreshToken } from "../middleware/JWTAction";
 
 const readFunc = async (req, res) => {
   try {
@@ -100,10 +102,45 @@ const getUserAccount = async (req, res) => {
   });
 };
 
+const requestRefreshToken = async (req, res) => {
+  let refresh_token = req.cookies.refresh_token;
+  console.log(refresh_token);
+  let user;
+  if (!refresh_token) return res.status(401).json("You're not authenticated!");
+  await jwt.verify(
+    refresh_token,
+    process.env.JWT_REFRESH_KEY,
+    (err, decoded) => {
+      if (err) {
+        console.log(err);
+      } else {
+        user = decoded;
+      }
+    }
+  );
+  console.log("user: ", user);
+  const newAccessToken = await createAccessToken(user);
+  const newRefreshToken = await createRefreshToken(user);
+  res.cookie("refresh_token", newRefreshToken, {
+    httpOnly: true,
+    secure: false,
+    path: "/",
+    sameSite: "strict",
+  });
+  return res.status(200).json({ access_token: newAccessToken });
+};
+
+const logoutUser = async (req, res) => {
+  res.clearCookie("refresh_token");
+  return res.status(200).json("Logged out!");
+};
+
 module.exports = {
   readFunc,
   createFunc,
   updateFunc,
   deleteFunc,
   getUserAccount,
+  requestRefreshToken,
+  logoutUser,
 };

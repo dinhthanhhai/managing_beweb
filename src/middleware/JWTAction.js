@@ -1,39 +1,69 @@
+import jwt from "jsonwebtoken";
 require("dotenv").config();
-import jwt, { decode } from "jsonwebtoken";
 
-const nonSecurePaths = ["/", "/login", "/register"];
+const nonSecurePaths = ["/", "/login", "/register", "/logout"];
 
-const cretateJWT = (payload) => {
-  let key = process.env.JWT_SECRET;
-  let token = null;
+const createAccessToken = async (payload) => {
+  let key = process.env.JWT_ACCESS_KEY;
+  let access_token = null;
   try {
-    token = jwt.sign(payload, key);
+    delete payload.exp;
+    access_token = await jwt.sign(payload, key, {
+      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
+    });
   } catch (error) {
     console.log(error);
   }
 
-  return token;
+  return access_token;
+};
+const createRefreshToken = async (payload) => {
+  let key = process.env.JWT_REFRESH_KEY;
+  let refresh_token = null;
+  try {
+    delete payload.exp;
+    refresh_token = await jwt.sign(payload, key, {
+      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
+  return refresh_token;
 };
 
-const verifyToken = (token) => {
-  let key = process.env.JWT_SECRET;
+const verifyToken = async (token) => {
+  let key = process.env.JWT_REFRESH_KEY;
   let decoded = null;
 
   try {
-    decoded = jwt.verify(token, key);
+    decoded = await jwt.verify(token, key);
   } catch (error) {
     console.log(error);
   }
   return decoded;
 };
 
-const checkUserJWT = (req, res, next) => {
+// const extractToken = (req) => {
+//   if (
+//     req.headers.authorization &&
+//     req.headers.authorization.split(" ")[0] === "Bearer"
+//   ) {
+//     // console.log(req.headers.authorization.split(" ")[1]);
+//     return req.headers.authorization.split(" ")[1];
+//   }
+//   return null;
+// };
+
+const checkUserJWT = async (req, res, next) => {
   if (nonSecurePaths.includes(req.path)) return next();
 
   let cookies = req.cookies;
-  if (cookies && cookies.jwt) {
-    let token = cookies.jwt;
-    let decoded = verifyToken(token);
+  // const tokenFromHeader = extractToken(req);
+
+  if (cookies && cookies.refresh_token) {
+    let token = cookies.refresh_token;
+    let decoded = await verifyToken(token);
     if (decoded) {
       req.user = decoded;
       req.token = token;
@@ -59,11 +89,9 @@ const checkUserPermission = (req, res, next) => {
     return next();
 
   if (req.user) {
-    let email = req.user.email;
-    let roles = req.user.groupWithRoles.Roles;
-
+    console.log("req.user: ", req.user);
+    let roles = req.user.groupWithRoles?.Roles;
     let currentUrl = req.path;
-
     if (!roles || roles.length === 0) {
       return res.status(403).json({
         EC: -1,
@@ -91,7 +119,8 @@ const checkUserPermission = (req, res, next) => {
 };
 
 module.exports = {
-  cretateJWT,
+  createAccessToken,
+  createRefreshToken,
   verifyToken,
   checkUserJWT,
   checkUserPermission,

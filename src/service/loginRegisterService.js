@@ -3,7 +3,8 @@ import db from "../models/index";
 import bcrypt from "bcryptjs";
 import { Op } from "sequelize";
 import { getGroupWithRoles } from "./JWTservice";
-import { cretateJWT } from "../middleware/JWTAction";
+import { createAccessToken, createRefreshToken } from "../middleware/JWTAction";
+require("dotenv").config();
 
 const salt = bcrypt.genSaltSync(10);
 
@@ -84,7 +85,7 @@ const checkPassword = (inputPassword, hashPassword) => {
 };
 
 //Login
-const handleUserLogin = async (rawData) => {
+const handleUserLogin = async (rawData, res) => {
   try {
     let user = await db.User.findOne({
       where: {
@@ -100,41 +101,40 @@ const handleUserLogin = async (rawData) => {
           email: user.email,
           username: user.username,
           groupWithRoles,
-          expiresIn: process.env.JWT_EXPIRES_IN,
         };
+        console.log("payload: ", payload);
+        //tao token
+        let access_token = await createAccessToken(payload);
+        let refresh_token = await createRefreshToken(payload);
+        console.log("access_token: ", access_token);
+        console.log("refresh_token: ", refresh_token);
 
-        let token = cretateJWT(payload);
+        //gan refresh_token vao cookie
+        res.cookie("refresh_token", refresh_token, {
+          httpOnly: true,
+          secure: false,
+          path: "/",
+          sameSite: "strict",
+        });
+
         return {
           EM: "OK",
           EC: 0,
           DT: {
-            access_token: token,
+            access_token: access_token,
             groupWithRoles,
             email: user.email,
             username: user.username,
           },
         };
       }
+    } else {
+      return {
+        EM: "Your email or phone number is incorrect!",
+        EC: 1,
+        DT: "",
+      };
     }
-    console.log(
-      "Input user with email/phone ",
-      rawData.valueLogin,
-      "password",
-      rawData.password
-    );
-    return {
-      EM: "Your email or phone number is incorrect!",
-      EC: 1,
-      DT: "",
-    };
-
-    // if (isPhoneExist === true) {
-    //   return {
-    //     EM: "Phone number is already exist",
-    //     EC: 1,
-    //     DT: "",
-    //   };
-    // }
   } catch (error) {
     console.log(error);
     return {
