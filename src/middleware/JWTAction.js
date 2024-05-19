@@ -1,14 +1,19 @@
 import jwt from "jsonwebtoken";
 require("dotenv").config();
 
-const nonSecurePaths = ["/", "/login", "/register", "/logout"];
+const nonSecurePaths = ["/", "/login", "/register"];
 
-const createAccessToken = async (payload) => {
+//tao access token
+const createAccessToken = (user) => {
   let key = process.env.JWT_ACCESS_KEY;
   let access_token = null;
   try {
-    delete payload.exp;
-    access_token = await jwt.sign(payload, key, {
+    const payload = {
+      email: user.email,
+      username: user.username,
+      groupWithRoles: user.groupWithRoles,
+    };
+    access_token = jwt.sign(payload, key, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
     });
   } catch (error) {
@@ -17,12 +22,18 @@ const createAccessToken = async (payload) => {
 
   return access_token;
 };
-const createRefreshToken = async (payload) => {
+
+//tao refresh token
+const createRefreshToken = (user) => {
   let key = process.env.JWT_REFRESH_KEY;
   let refresh_token = null;
   try {
-    delete payload.exp;
-    refresh_token = await jwt.sign(payload, key, {
+    const payload = {
+      email: user.email,
+      username: user.username,
+      groupWithRoles: user.groupWithRoles,
+    };
+    refresh_token = jwt.sign(payload, key, {
       expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
     });
   } catch (error) {
@@ -32,38 +43,27 @@ const createRefreshToken = async (payload) => {
   return refresh_token;
 };
 
-const verifyToken = async (token) => {
+//verify refresh token
+const verifyToken = (token) => {
   let key = process.env.JWT_REFRESH_KEY;
   let decoded = null;
 
   try {
-    decoded = await jwt.verify(token, key);
+    decoded = jwt.verify(token, key);
   } catch (error) {
-    console.log(error);
+    console.log("xxxx", error);
   }
   return decoded;
 };
 
-// const extractToken = (req) => {
-//   if (
-//     req.headers.authorization &&
-//     req.headers.authorization.split(" ")[0] === "Bearer"
-//   ) {
-//     // console.log(req.headers.authorization.split(" ")[1]);
-//     return req.headers.authorization.split(" ")[1];
-//   }
-//   return null;
-// };
-
-const checkUserJWT = async (req, res, next) => {
+//kiem tra user da dang nhap
+const checkUserJWT = (req, res, next) => {
   if (nonSecurePaths.includes(req.path)) return next();
 
   let cookies = req.cookies;
-  // const tokenFromHeader = extractToken(req);
-
   if (cookies && cookies.refresh_token) {
     let token = cookies.refresh_token;
-    let decoded = await verifyToken(token);
+    let decoded = verifyToken(token);
     if (decoded) {
       req.user = decoded;
       req.token = token;
@@ -78,20 +78,42 @@ const checkUserJWT = async (req, res, next) => {
   } else {
     return res.status(401).json({
       EC: -1,
-      EM: "Not authenticated the user1!",
+      EM: "Not authenticated the user!",
       DT: "",
     });
   }
 };
 
+//kiem tra user da dang nhap
+const verifyUser = (req, res, next) => {
+  // if (nonSecurePaths.includes(req.path)) return next();
+  const tokenFromHeader = req.headers.authorization;
+  if (tokenFromHeader) {
+    const accessToken = tokenFromHeader.split(" ")[1];
+    jwt.verify(accessToken, process.env.JWT_ACCESS_KEY, (err, user) => {
+      if (err) {
+        return res.status(403).json("Token is not valid!");
+      }
+      req.user = user;
+      req.refresh_token = accessToken;
+      next();
+    });
+  } else {
+    return res.status(401).json("You're not authenticated1232131");
+  }
+};
+
+//kiem tra quyen user voi cac route
 const checkUserPermission = (req, res, next) => {
   if (nonSecurePaths.includes(req.path) || req.path === "/account")
     return next();
 
   if (req.user) {
+    let refresh_token = req.cookies.refresh_token;
     console.log("req.user: ", req.user);
     let roles = req.user.groupWithRoles?.Roles;
     let currentUrl = req.path;
+    console.log(currentUrl);
     if (!roles || roles.length === 0) {
       return res.status(403).json({
         EC: -1,
@@ -124,4 +146,5 @@ module.exports = {
   verifyToken,
   checkUserJWT,
   checkUserPermission,
+  verifyUser,
 };

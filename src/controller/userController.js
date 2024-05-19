@@ -101,38 +101,36 @@ const getUserAccount = async (req, res) => {
     },
   });
 };
-
-const requestRefreshToken = async (req, res) => {
+//refresh token
+const requestRefreshToken = (req, res) => {
   let refresh_token = req.cookies.refresh_token;
-  console.log(refresh_token);
-  let user;
+  const tokenFromHeader = req.headers.authorization;
   if (!refresh_token) return res.status(401).json("You're not authenticated!");
-  await jwt.verify(
-    refresh_token,
-    process.env.JWT_REFRESH_KEY,
-    (err, decoded) => {
-      if (err) {
-        console.log(err);
-      } else {
-        user = decoded;
-      }
+  jwt.verify(refresh_token, process.env.JWT_REFRESH_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(403).json("Invalid refresh token");
+    } else {
+      const user = decoded;
+      const newAccessToken = createAccessToken(user);
+      const newRefreshToken = createRefreshToken(user);
+      res.cookie("refresh_token", newRefreshToken, {
+        httpOnly: true,
+        secure: true,
+        path: "/",
+        sameSite: "None",
+      });
+      return res.status(200).json({ access_token: newAccessToken });
     }
-  );
-  console.log("user: ", user);
-  const newAccessToken = await createAccessToken(user);
-  const newRefreshToken = await createRefreshToken(user);
-  res.cookie("refresh_token", newRefreshToken, {
-    httpOnly: true,
-    secure: false,
-    path: "/",
-    sameSite: "strict",
   });
-  return res.status(200).json({ access_token: newAccessToken });
 };
-
+//logout
 const logoutUser = async (req, res) => {
   res.clearCookie("refresh_token");
-  return res.status(200).json("Logged out!");
+  return res.status(200).json({
+    EM: "Logged out",
+    EC: 0,
+    DT: "",
+  });
 };
 
 module.exports = {

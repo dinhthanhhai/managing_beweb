@@ -102,13 +102,9 @@ const handleUserLogin = async (rawData, res) => {
           username: user.username,
           groupWithRoles,
         };
-        console.log("payload: ", payload);
         //tao token
         let access_token = await createAccessToken(payload);
         let refresh_token = await createRefreshToken(payload);
-        console.log("access_token: ", access_token);
-        console.log("refresh_token: ", refresh_token);
-
         //gan refresh_token vao cookie
         res.cookie("refresh_token", refresh_token, {
           httpOnly: true,
@@ -140,6 +136,7 @@ const handleUserLogin = async (rawData, res) => {
     return {
       EM: "Something wrongs in service...",
       EC: 1,
+      DT: "",
     };
   }
 };

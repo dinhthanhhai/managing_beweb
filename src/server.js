@@ -6,6 +6,7 @@ import configViewEngine from "./config/viewEngine";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import configCors from "./config/cors";
+// import configCors from "./config/configCors";
 
 const app = express();
 
